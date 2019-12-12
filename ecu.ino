@@ -46,8 +46,8 @@ void loop() {
     rpm = 1000;
   }
   coolant = ((millis() - unlocked_millis)/1000);
-  if (coolant > 145) {
-    coolant = 145;
+  if (coolant > 89) {
+    coolant = 89;
   }
 
 
@@ -122,7 +122,7 @@ void loop() {
       send(0x00); // Unknown
       send(0xFF); // Sometimes documented to be air/fuel ratio, but often observed to never change from 0xFF
       send(0x00); // Unknown
-      send(0x66); // Lambda sensor voltage, 0.5mv per LSB
+      send(millis() & 0xFF); // Lambda sensor voltage, 0.5mv per LSB
       send(0x00); // Lambda sensor frequency?
       send(0x00); // Lambda sensor duty cycle?
       send(0x01); // Lambda sensor status? 0x01 for good, any other value for no good
@@ -151,7 +151,8 @@ void loop() {
       break;
   }
 
-  delay(100); // try and have a rest
+  Serial.flush();
+  // delay(100); // try and have a rest
 
 }
 
