@@ -1,7 +1,14 @@
 #!python
-
+"""
+TODO:
+change to a class, get rid of globals
+"""
+import random
 import serial
 import time
+
+coolant_temp = 10+55 # 10 degrees start
+intake_air_temp = 10+55 # 10 degrees start
 
 def main():
     ser = serial.Serial()
@@ -54,12 +61,19 @@ def main():
     ser.close()
 
 def data80(ser):
+    global coolant_temp
+    global intake_air_temp
     ser.write(b"\x1c") # (28) packet length
-    ser.write(b"\xFF") # rpm lower 0x01-2 Engine speed in RPM (16 bits)
-    ser.write(b"\xFF") # rpm lower
-    ser.write(b"\xF0") # 0x03 Coolant temperature in degrees C with +55 offset and 8-bit wrap
+    rpm = random.randint(850, 900)
+    ser.write(bytes([rpm >> 8])) # rpm upper 0x01-2 Engine speed in RPM (16 bits)
+    ser.write(bytes([rpm & 0xFF])) # rpm lower
+    if coolant_temp < 88+55:
+        coolant_temp += 1
+    ser.write(bytes([coolant_temp])) # 0x03 Coolant temperature in degrees C with +55 offset and 8-bit wrap
     ser.write(b"\x40") # 0x04 Computed ambient temperature in degrees C with +55 offset and 8-bit wrap
-    ser.write(b"\x4B") # 0x05 Intake air temperature in degrees C with +55 offset and 8-bit wrap
+    if intake_air_temp < 20+55:
+        intake_air_temp += 1
+    ser.write(bytes([intake_air_temp])) # 0x05 Intake air temperature in degrees C with +55 offset and 8-bit wrap
     ser.write(b"\x00") # 0x06 Fuel temperature in degrees C with +55 offset and 8-bit wrap. This is not supported on the Mini SPi, and always appears as 0xFF.
     ser.write(b"\x05") # 0x07  MAP sensor value in kilopascals
     ser.write(b"\x7B") # 0x08 Battery voltage, 0.1V per LSB (e.g. 0x7B == 12.3V)
@@ -90,7 +104,7 @@ def data7d(ser):
     ser.write(b"\x00") # Unknown
     ser.write(b"\xFF") # Sometimes documented to be air/fuel ratio, but often observed to never change from 0xFF
     ser.write(b"\x00") # Unknown
-    ser.write(b"\xF0") # Lambda sensor voltage, 0.5mv per LSB
+    ser.write(bytes([random.randint(20, 200)])) # Lambda sensor voltage, 0.5mv per LSB 0 to 1000 mv
     ser.write(b"\x00") # Lambda sensor frequency?
     ser.write(b"\x00") # Lambda sensor duty cycle?
     ser.write(b"\x01") # Lambda sensor status? 0x01 for good, any other value for no good
