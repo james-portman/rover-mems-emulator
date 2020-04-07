@@ -19,10 +19,6 @@ def main():
     ser.stopbits = 1
     ser.open()
 
-
-    print(ser.name)         # check which port was really used
-    # ser.write(b'hello')     # write a string
-
     while True:
         x = ser.read()          # read one byte
         print("<", x)
@@ -60,6 +56,7 @@ def main():
 
     ser.close()
 
+
 def data80(ser):
     global coolant_temp
     global intake_air_temp
@@ -96,6 +93,7 @@ def data80(ser):
     ser.write(b"\x00") # 0x19 Unknown
     ser.write(b"\x00") # 0x1A Unknown
     ser.write(b"\x00") # 0x1B Unknown
+
 
 def data7d(ser):
     ser.write(b"\x20") # (32) packet length
