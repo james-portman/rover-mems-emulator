@@ -5,6 +5,7 @@ change to a class, get rid of globals
 """
 import random
 import serial
+import sys
 import time
 
 coolant_temp = 10+55 # 10 degrees start
@@ -12,7 +13,10 @@ intake_air_temp = 10+55 # 10 degrees start
 
 def main():
     ser = serial.Serial()
-    ser.port = '/dev/ttyUSB0'
+    if len(sys.argv) > 1:
+        ser.port = sys.argv[1]
+    else:
+        ser.port = '/dev/ttyUSB0'
     ser.baudrate = 9600
     ser.bytesize = 8
     ser.parity = "N"
@@ -49,9 +53,12 @@ def main():
         elif x_int == 0x7D:
             print("Data packet 0x7D")
             data7d(ser)
+        elif x_int == 0xCC:
+            print("Asked to clear fault codes (0xCC)")
+            ser.write(b'\x00')
         else:
             print("************ unknown command")
-
+        time.sleep(0.100) # be slow like the ECUs are
         ser.flush()
 
     ser.close()
