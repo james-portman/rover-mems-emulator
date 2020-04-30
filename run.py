@@ -11,7 +11,17 @@ import time
 coolant_temp = 10+55 # 10 degrees start
 intake_air_temp = 10+55 # 10 degrees start
 
+ignition_advance = 128
+idle_speed = 128
+idle_decay = 128
+fuel_trim = 128
+
 def main():
+    global ignition_advance
+    global idle_speed
+    global idle_decay
+    global fuel_trim
+
     ser = serial.Serial()
     if len(sys.argv) > 1:
         ser.port = sys.argv[1]
@@ -41,6 +51,12 @@ def main():
             ser.write(b'\x00')
             ser.write(b'\x02')
             ser.write(b'\x03')
+
+            # MNE MNE10027
+            # ser.write(b'\x39')
+            # ser.write(b'\x00')
+            # ser.write(b'\x05')
+            # ser.write(b'\x55')
         elif x_int == 0xf4:
             print("PING")
             ser.write(b'\x00')
@@ -56,6 +72,35 @@ def main():
         elif x_int == 0xCC:
             print("Asked to clear fault codes (0xCC)")
             ser.write(b'\x00')
+
+        elif x_int == 0x93:
+            print("Asked to increase ignition advance (0x93)")
+            if ignition_advance < 255:
+                ignition_advance += 1
+            ser.write(bytes([ignition_advance]))
+
+        elif x_int == 0x91:
+            print("Asked to increase idle speed (0x91)")
+            if idle_speed < 255:
+                idle_speed += 1
+            ser.write(bytes([idle_speed]))
+
+        elif x_int == 0x89:
+            print("Asked to increase idle decay (0x89)")
+            if idle_decay < 255:
+                idle_decay += 1
+            ser.write(bytes([idle_decay]))
+
+        elif x_int == 0x79:
+            print("Asked to increase fuel trim (0x79)")
+            if fuel_trim < 255:
+                fuel_trim += 1
+            ser.write(bytes([fuel_trim]))
+
+        elif x_int == 0x0F:
+            print("reset adaptations")
+            ser.write(b'\x00')
+
         else:
             print("************ unknown command")
         time.sleep(0.100) # be slow like the ECUs are
@@ -94,7 +139,8 @@ def data80(ser):
     ser.write(b"\x00") # 0x13-14 Idle speed deviation (16 bits)
     ser.write(b"\x00") #
     ser.write(b"\x00") # 0x15 Unknown
-    ser.write(b"\x00") # 0x16 Ignition advance, 0.5 degrees per LSB with range of -24 deg (0x00) to 103.5 deg (0xFF)
+    # ser.write(b"\x00") # 0x16 Ignition advance, 0.5 degrees per LSB with range of -24 deg (0x00) to 103.5 deg (0xFF)
+    ser.write(bytes([ignition_advance]))
     ser.write(b"\x00") # 0x17-18 Coil time, 0.002 milliseconds per LSB (16 bits)
     ser.write(b"\x00") #
     ser.write(b"\x00") # 0x19 Unknown
@@ -118,7 +164,7 @@ def data7d(ser):
     ser.write(b"\x00") # Short term trim, 1% per LSB
     ser.write(b"\x00") # Carbon canister purge valve duty cycle?
     ser.write(b"\x00") # Unknown
-    ser.write(b"\x00") # Idle base position
+    ser.write(bytes([idle_speed])) # Idle base position
     ser.write(b"\x00") # Unknown
     ser.write(b"\x00") # Unknown
     ser.write(b"\x00") # Unknown
